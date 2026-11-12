@@ -107,13 +107,51 @@ insert into transacoes_cripto(carteira_id, criptomoeda_id, quantidade, valor_pag
 
 Consultas avançadas
 
+--1
+SELECT
+    c.endereco_wallet,
+    c.rede_blockchain,
+    c.saldo_usd,
+    i.nome AS nome_investidor,
+    i.cpf
+    FROM carteiras c
+    INNER JOIN investidores i
+    ON c.investidor_id = i.id
+    WHERE c.status IN ('Ativa', 'Em Analise');
 
 
+--2
+SELECT
+    co.nome_exchange,
+    SUM(t.valor_pago) AS total_movimentado
+    FROM corretoras co
+    INNER JOIN criptomoedas cr
+    ON co.id = cr.corretora_id
+    INNER JOIN transacoes_cripto t
+    ON cr.id = t.criptomoeda_id
+    GROUP BY co.nome_exchange
+    ORDER BY total_movimentado DESC;
+
+
+--3
+SELECT
+    c.endereco_wallet,
+    cr.nome_moeda,
+    t.quantidade,
+    t.valor_pago,
+    t.data_transacao
+    FROM transacoes_cripto t
+    INNER JOIN carteiras c
+    ON t.carteira_id = c.id
+    INNER JOIN criptomoedas cr
+    ON t.criptomoeda_id = cr.id
+    WHERE t.valor_pago > 500
+    ORDER BY t.valor_pago DESC;
 
 
 Views
 
-
+--1
 CREATE VIEW vw_painel_carteiras AS SELECT
     c.endereco_wallet,
     c.rede_blockchain,
@@ -126,19 +164,7 @@ INNER JOIN investidores i
     ON c.investidor_id = i.id;
 
 
-CREATE VIEW vw_investimento_total_carteiras AS SELECT
-    c.id AS id_carteira,
-    c.endereco_wallet,
-    c.saldo_usd,
-    COUNT(t.id) AS quantidade_transacoes,
-    COALESCE(SUM(t.valor_pago), 0) AS custo_total_compras
-FROM carteiras c
-LEFT JOIN transacoes_cripto t
-    ON c.id = t.carteira_id
-GROUP BY
-    c.id,
-    c.endereco_wallet,
-    c.saldo_usd;
+--2
 
 
 
@@ -148,7 +174,4 @@ SELECT * FROM corretoras
 SELECT * FROM criptomoedas
 SELECT * FROM transacoes_cripto
 -
-
--
 SELECT * FROM vw_painel_carteiras;
-SELECT * FROM vw_investimento_total_carteiras;
